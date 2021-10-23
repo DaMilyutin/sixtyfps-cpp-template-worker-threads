@@ -1,8 +1,13 @@
 import { Button, VerticalBox } from "sixtyfps_widgets.60";
 
 export AppWindow := Window {
+    preferred-width: 400px;
+    preferred-height: 600px;
+    
     property<int> counter: 42;
+    property<float> progress: -1.;
     callback request-increase-value();
+
     VerticalBox { 
         Text {
             text: "Counter: \{counter}";
@@ -12,6 +17,10 @@ export AppWindow := Window {
             clicked => { 
                 request-increase-value();
             }
+        }
+        Text {
+            visible: progress >= 0.;
+            text: "\{progress}";
         }
      }
 }
