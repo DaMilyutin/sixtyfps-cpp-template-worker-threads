@@ -1,26 +1,52 @@
-import { Button, VerticalBox } from "sixtyfps_widgets.60";
+import { Button, VerticalBox, ListView, Slider } from "sixtyfps_widgets.60";
+
+
+export struct ListItemData := {
+    id: int,
+    progress: float,
+}
 
 export AppWindow := Window {
     preferred-width: 400px;
     preferred-height: 600px;
     
     property<int> counter: 42;
-    property<float> progress: -1.;
+    property<float> latency <=> slider.value;
+    property<[ListItemData]> task-data-model;
+
     callback request-increase-value();
 
-    VerticalBox { 
-        Text {
-            text: "Counter: \{counter}";
-        }
-        Button {
-            text: "Increase value";
-            clicked => { 
-                request-increase-value();
+    HorizontalLayout {
+        VerticalBox {
+            width: parent.width/2;
+            Text { text: "Counter: \{counter}"; }
+            Button {
+                text: "Increase value";
+                clicked => {
+                    request-increase-value();
+                }
+            }
+            Text{ text: "Latency: \{slider.value}"; }
+            slider := Slider {
+                height: 20px;
             }
         }
-        Text {
-            visible: progress >= 0.;
-            text: "\{progress}";
+
+        ListView {
+            for task[i] in task-data-model:
+                Rectangle {
+                    border-color: #030C8FF1;
+                    border-width: 1px;
+                    VerticalLayout {
+                        Text { text: "[\{i}] task: \{task.id} => progress: \{task.progress}"; }                        
+                        Rectangle { 
+                            width: task.progress/100*parent.width;
+                            height: 3px;
+                            background: task.progress > 99.9? #00FF00: #FF0000;   
+                        }
+                    }
+                }
         }
-     }
+
+    }
 }
