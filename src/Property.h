@@ -16,13 +16,13 @@ struct Property
         auto get() const 
         { 
             auto& p = weak;
-            return sixtyfps::blocking_invoke_from_event_loop([&p](){ return weak.get(); });
+            return sixtyfps::blocking_invoke_from_event_loop([&p](){ return p.get(); });
         }
 
         void set(T const& t) 
         {
             auto& p = weak; 
-            sixtyfps::blocking_invoke_from_event_loop([&p, t](){ weak.set(t); return 0; }); 
+            sixtyfps::blocking_invoke_from_event_loop([&p, t](){ p.set(t); return 0; }); 
         }
 
         template<typename F>
@@ -58,13 +58,13 @@ struct Property
         auto get() const 
         { 
             auto& p = weak;
-            return sixtyfps::invoke_from_event_loop([&p](){ return weak.get();});
+            return sixtyfps::invoke_from_event_loop([&p](){ return p.get();});
         }
 
         void set(T const& t) 
         {
             auto& p = weak; 
-            sixtyfps::invoke_from_event_loop([&p, t](){ weak.set(t);}); 
+            sixtyfps::invoke_from_event_loop([&p, t](){ p.set(t);}); 
         }
 
         template<typename F>
