@@ -33,7 +33,6 @@ struct Property
         }
 
         void operator=(T const& t) { set(t); }
-        operator T() const { return get(); }
 
         template<typename X>
         void operator+=(X const& x) { update([x](auto const& t) { return t + x; }); } 
@@ -75,7 +74,6 @@ struct Property
         }
 
         void operator=(T const& t) { set(t); }
-        operator T() const { return get(); }
 
         template<typename X>
         void operator+=(X const& x) { update([x](auto const& t) { return t + x; }); } 
@@ -92,6 +90,8 @@ struct Property
     private:
         Property& weak;
     };
+
+    void operator=(T const& t) { set(t); }
 
     template<typename F>
     void update(F f) { set(f(get())); } 
