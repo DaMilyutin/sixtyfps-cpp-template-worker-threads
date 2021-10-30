@@ -9,6 +9,8 @@
 #include <type_traits>
 #include <assert.h>
 
+#include "../_lib/ThreadPool/ThreadPool.hpp"
+
 int nextId()
 {
     static int n = 0;
@@ -47,16 +49,10 @@ int main(int argc, char **argv)
 
     auto counter = make_property<int>([ui](){ return ui->get_counter();}, [ui](int i){ui->set_counter(i);});
 
-    auto do_job = [&](){
-            int id = nextId();
-            float latency;  
-            sixtyfps::blocking_invoke_from_event_loop([&](){
-                latency = ui->get_latency();
-                int r = task_data_model->row_count(); 
-                task_data_model->push_back(ListItemData{id, 0.});
-                task_id2index->push(id, r);
-                return 0; // trick to fix compilation error on forbidden optional<void>
-            });
+    dbr::cc::ThreadPool pool;
+
+    auto do_job = [&](int id, float latency){
+
 
             auto const period = std::chrono::milliseconds{int(10.*latency)};
             for(int i = 1; i <= 100; ++i)
@@ -81,7 +77,13 @@ int main(int argc, char **argv)
         };
 
     ui->on_request_increase_value([&]{
-        std::thread(do_job).detach();
+        int id = nextId();
+        float latency = ui->get_latency();
+        int r = task_data_model->row_count(); 
+        task_data_model->push_back(ListItemData{id, 0.});
+        task_id2index->push(id, r);
+        pool.add(do_job, id, latency);
+        //std::thread(do_job, id, latency).detach();
     });
     
     ui->run();
