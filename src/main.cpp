@@ -87,5 +87,6 @@ int main(int argc, char **argv)
     
     ui->run();
     std::cout << "Exiting" << std::endl;
+    std::terminate();
     return 0;
 }
