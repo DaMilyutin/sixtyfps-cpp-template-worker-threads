@@ -47,19 +47,18 @@ int main(int argc, char **argv)
 
     ui->set_task_data_model(task_data_model);
 
-    auto counter = make_property<int>([ui](){ return ui->get_counter();}, [ui](int i){ui->set_counter(i);});
+    auto counter = F60_PROPERTY(counter, int, ui);// make_property<int>([ui](){ return ui->get_counter();}, [ui](int i){ui->set_counter(i);});
 
     dbr::cc::ThreadPool pool;
 
     auto do_job = [&](int id, float latency){
-
-
             auto const period = std::chrono::milliseconds{int(10.*latency)};
             for(int i = 1; i <= 100; ++i)
             {
                 std::this_thread::sleep_for(period);
                 sixtyfps::blocking_invoke_from_event_loop([&]{
                     auto r = task_id2index->id2row[id];
+                    std::cout << "task " << id << " : progress " << i << std::endl; 
                     task_data_model->set_row_data(r, ListItemData{id, float(i)});
                     return 0; // trick to fix compilation error on forbidden optional<void>
                 });
@@ -87,5 +86,6 @@ int main(int argc, char **argv)
     });
     
     ui->run();
+    std::cout << "Exiting" << std::endl;
     return 0;
 }
