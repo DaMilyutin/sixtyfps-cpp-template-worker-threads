@@ -93,7 +93,6 @@ struct Property
         Property& weak;
     };
 
-
     template<typename F>
     void update(F f) { set(f(get())); } 
 
@@ -119,3 +118,4 @@ struct Property
 template<typename T, typename G, typename S>
 inline Property<T, G, S> make_property(G&& g, S&& s) { return Property<T, G, S>(std::forward<G>(g), std::forward<S>(s)); }
 
+#define F60_PROPERTY(NAME, TYPE, UI) make_property<TYPE>([UI](){ return UI->get_##NAME(); }, [UI](TYPE const& v){ return UI->set_##NAME(v); })
