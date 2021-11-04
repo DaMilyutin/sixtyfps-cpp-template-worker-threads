@@ -23,13 +23,13 @@ struct Property
         void set(T const& t) 
         {
             auto& p = weak; 
-            sixtyfps::blocking_invoke_from_event_loop([&p, t](){ p.set(t); return 0; }); 
+            sixtyfps::blocking_invoke_from_event_loop([&p, t](){ p.set(t); }); 
         }
 
         template<typename F>
         void update(F f) { 
             auto& p = weak;
-            sixtyfps::blocking_invoke_from_event_loop([&p, &f]() { p.update(std::forward<F>(f)); return 0; });
+            sixtyfps::blocking_invoke_from_event_loop([&p, &f]() { p.update(std::forward<F>(f)); });
         }
 
         void operator=(T const& t) { set(t); }
