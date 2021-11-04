@@ -58,9 +58,7 @@ int main(int argc, char **argv)
                 std::this_thread::sleep_for(period);
                 sixtyfps::blocking_invoke_from_event_loop([&]{
                     auto r = task_id2index->id2row[id];
-                    std::cout << "task " << id << " : progress " << i << std::endl; 
                     task_data_model->set_row_data(r, ListItemData{id, float(i)});
-                    return 0; // trick to fix compilation error on forbidden optional<void>
                 });
             }
             std::this_thread::sleep_for(std::chrono::seconds{1});
@@ -71,7 +69,6 @@ int main(int argc, char **argv)
                 auto r = task_id2index->id2row[id];
                 task_data_model->erase(r);
                 task_id2index->erase(r);
-                return 0; // trick to fix compilation error on forbidden optional<void>
             });
         };
 
@@ -86,7 +83,6 @@ int main(int argc, char **argv)
     });
     
     ui->run();
-    std::cout << "Exiting" << std::endl;
-    std::terminate();
+    pool.destroy_detach();
     return 0;
 }
