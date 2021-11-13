@@ -13,7 +13,5 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(SixtyFPS)
 
 add_executable(my_application src/main.cpp)
-target_sources(my_application
-                    PRIVATE _lib/ThreadPool/ThreadPool.cpp)
 target_link_libraries(my_application PRIVATE SixtyFPS::SixtyFPS)
 sixtyfps_target_60_sources(my_application ui/appwindow.60)

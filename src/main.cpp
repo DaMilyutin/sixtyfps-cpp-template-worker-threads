@@ -9,8 +9,6 @@
 #include <type_traits>
 #include <assert.h>
 
-#include "../_lib/ThreadPool/ThreadPool.hpp"
-
 int nextId()
 {
     static int n = 0;
@@ -49,7 +47,6 @@ int main(int argc, char **argv)
 
     auto counter = F60_PROPERTY(counter, int, ui);// make_property<int>([ui](){ return ui->get_counter();}, [ui](int i){ui->set_counter(i);});
 
-    dbr::cc::ThreadPool pool;
     std::atomic<bool>   stop = false;
 
     auto do_job = [&](int id, float latency){
@@ -89,24 +86,10 @@ int main(int argc, char **argv)
         int r = task_data_model->row_count(); 
         task_data_model->push_back(ListItemData{id, 0.});
         task_id2index->push(id, r);
-        pool.add(do_job, id, latency);
-        //std::thread(do_job, id, latency).detach();
+        std::thread(do_job, id, latency).detach();
     });
     
     ui->run();
-    //pool.destroy_detach();
-    std::cout << "exiting!" << std::endl;
-    sixtyfps::run_event_loop();
-    pool.clear();
-    stop = true;
-
-    while(pool.activeJobs() > 0)
-    {
-        std::cout << "...left " << pool.activeJobs() << " jobs" << std::endl;
-        std::this_thread::sleep_for(std::chrono::milliseconds{1});
-        sixtyfps::run_event_loop();
-    }
-    sixtyfps::quit_event_loop();
     std::cout << "done!" << std::endl;
     return 0;
 }
