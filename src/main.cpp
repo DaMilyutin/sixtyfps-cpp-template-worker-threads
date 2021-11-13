@@ -24,8 +24,8 @@ struct IdMap
 
     void push(int id, int row)
     {
+        id2row.emplace(id, int(row2id.size()));
         row2id.push_back(id);
-        id2row.emplace(id, int(row2id.size()-1));
     }
 
     void erase(int row)
@@ -50,25 +50,36 @@ int main(int argc, char **argv)
     auto counter = F60_PROPERTY(counter, int, ui);// make_property<int>([ui](){ return ui->get_counter();}, [ui](int i){ui->set_counter(i);});
 
     dbr::cc::ThreadPool pool;
+    std::atomic<bool>   stop = false;
 
     auto do_job = [&](int id, float latency){
             auto const period = std::chrono::milliseconds{int(10.*latency)};
+            auto onExit = [&]()
+            {
+                auto r = task_id2index->id2row[id];
+                task_data_model->erase(r);
+                task_id2index->erase(r);
+            };
+
             for(int i = 1; i <= 100; ++i)
             {
+                if(stop)
+                {
+                    std::cout << "terminate task" << id << std::endl;
+                    sixtyfps::blocking_invoke_from_event_loop(onExit);
+                    return;
+                }
                 std::this_thread::sleep_for(period);
                 sixtyfps::blocking_invoke_from_event_loop([&]{
                     auto r = task_id2index->id2row[id];
                     task_data_model->set_row_data(r, ListItemData{id, float(i)});
                 });
             }
+
             std::this_thread::sleep_for(std::chrono::seconds{1});
-            // may call counter like this:
-            // counter.blocking() += 1;
             sixtyfps::blocking_invoke_from_event_loop([&] {                
-                counter += 1; // but this is more optimal here
-                auto r = task_id2index->id2row[id];
-                task_data_model->erase(r);
-                task_id2index->erase(r);
+                counter += 1;
+                onExit();
             });
         };
 
@@ -83,6 +94,19 @@ int main(int argc, char **argv)
     });
     
     ui->run();
-    pool.destroy_detach();
+    //pool.destroy_detach();
+    std::cout << "exiting!" << std::endl;
+    sixtyfps::run_event_loop();
+    pool.clear();
+    stop = true;
+
+    while(pool.activeJobs() > 0)
+    {
+        std::cout << "...left " << pool.activeJobs() << " jobs" << std::endl;
+        std::this_thread::sleep_for(std::chrono::milliseconds{1});
+        sixtyfps::run_event_loop();
+    }
+    sixtyfps::quit_event_loop();
+    std::cout << "done!" << std::endl;
     return 0;
 }
